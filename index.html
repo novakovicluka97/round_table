@@ -64,7 +64,7 @@
         });
 
         const data = await response.json();
-
+		console.log(data); // Add this line
         // Example format: data = [{agent: "Socrates", text: "Why do we even...?"}, {...}]
         output.innerHTML = "";
         data.forEach(item => {
