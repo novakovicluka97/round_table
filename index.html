@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ROUND TABLE</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #f4f4f4;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 1em;
+    }
+    button {
+      background: darkred;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .response-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #222;
+      border-radius: 5px;
+    }
+    .agent {
+      font-weight: bold;
+      margin-top: 10px;
+      color: gold;
+    }
+    .text {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>ROUND TABLE</h1>
+  <p>Enter your topic or question:</p>
+  <input id="prompt" type="text" style="width: 80%;" placeholder="e.g. Should men cry in public?" />
+  <button onclick="sendPrompt()">Start Round Table</button>
+
+  <div id="output" class="response-box"></div>
+
+  <script>
+    async function sendPrompt() {
+      const prompt = document.getElementById("prompt").value;
+      const output = document.getElementById("output");
+      output.innerHTML = "Gathering opinions...";
+
+      try {
+        const response = await fetch("https://your-n8n-webhook-url.com/webhook/roundtable", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ prompt })
+        });
+
+        const data = await response.json();
+
+        // Example format: data = [{agent: "Socrates", text: "Why do we even...?"}, {...}]
+        output.innerHTML = "";
+        data.forEach(item => {
+          output.innerHTML += `<div class="agent">${item.agent}:</div><div class="text">${item.text}</div>`;
+        });
+
+      } catch (error) {
+        output.innerHTML = "Something went wrong: " + error.message;
+      }
+    }
+  </script>
+
+</body>
+</html>
