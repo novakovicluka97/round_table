@@ -61,7 +61,7 @@
 
       // Initial request to start the roundtable
       try {
-        await fetch("https://marokanac.app.n8n.cloud/webhook/roundtable", {
+        await fetch("https://your-n8n-server.com/webhook/roundtable", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt })
@@ -80,7 +80,7 @@
 
       while (roundIsRunning) {
         try {
-          const res = await fetch(`https://marokanac.app.n8n.cloud/webhook/roundtable-next?index=${responseIndex}`);
+          const res = await fetch(`https://your-n8n-server.com/webhook/roundtable-next?index=${responseIndex}`);
           if (!res.ok) break;
 
           const data = await res.json();
