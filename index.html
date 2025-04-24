@@ -41,62 +41,60 @@
 </head>
 <body>
 
-  <h1>ROUND TABLE</h1>
+  <h1>ROUND TABLE V2</h1>
   <p>Enter your topic or question:</p>
   <input id="prompt" type="text" style="width: 80%;" placeholder="e.g. Should men cry in public?" />
-  <button onclick="startRoundTable()">Start Round Table</button>
+  <button onclick="sendPrompt()">Start Round Table</button>
 
   <div id="output" class="response-box"></div>
 
   <script>
-    let roundIsRunning = false;
-    let responseIndex = 0;
+    let intervalId;
+    let conversationId;
+    let received = [];
 
-    async function startRoundTable() {
+    async function sendPrompt() {
       const prompt = document.getElementById("prompt").value;
       const output = document.getElementById("output");
-      output.innerHTML = "<em>Gathering opinions...</em>";
-      responseIndex = 0;
-      roundIsRunning = true;
+      output.innerHTML = "Gathering opinions...";
 
-      // Initial request to start the roundtable
       try {
-        await fetch("https://your-n8n-server.com/webhook/roundtable", {
+        // Step 1: Send the prompt
+        const response = await fetch("https://marokanac.app.n8n.cloud/webhook-test/round_table", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt })
         });
 
-        // Start polling
-        pollNextResponse();
+        const data = await response.json();
+        output.innerHTML = ""; // clear first
+
+        // Display the first wave of replies
+        data.forEach(item => {
+          appendReply(item.agent, item.text);
+          received.push(item); // track it
+        });
+
+        // Step 2: Begin polling for more responses (optional)
+        intervalId = setInterval(async () => {
+          const more = await fetch(`https://marokanac.app.n8n.cloud/webhook-test/check-responses`);
+          const newReplies = await more.json();
+
+          newReplies.forEach(item => {
+            const exists = received.some(r => r.agent === item.agent && r.text === item.text);
+            if (!exists) {
+              appendReply(item.agent, item.text);
+              received.push(item);
+            }
+          });
+
+          if (newReplies.length === 0) {
+            clearInterval(intervalId); // stop polling if nothing new
+          }
+        }, 10000); // every 2 seconds
 
       } catch (error) {
-        output.innerHTML = "Error starting roundtable: " + error.message;
-      }
-    }
-
-    async function pollNextResponse() {
-      const output = document.getElementById("output");
-
-      while (roundIsRunning) {
-        try {
-          const res = await fetch(`https://your-n8n-server.com/webhook/roundtable-next?index=${responseIndex}`);
-          if (!res.ok) break;
-
-          const data = await res.json();
-
-          if (data && data.agent && data.text) {
-            appendReply(data.agent, data.text);
-            responseIndex += 1;
-          } else {
-            // No new data yet → wait and try again
-            await new Promise(resolve => setTimeout(resolve, 2000));
-          }
-
-        } catch (err) {
-          console.log("Polling stopped or failed:", err.message);
-          roundIsRunning = false;
-        }
+        output.innerHTML = "Something went wrong: " + error.message;
       }
     }
 
